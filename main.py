@@ -4,7 +4,6 @@ from selenium import webdriver
 import datetime
 from selenium.webdriver.common.by import By
 import time
-import asyncio
 import os.path
 
 def scrap_swedbank(driver, result_names, result_prices):
@@ -30,7 +29,6 @@ def scrap_binance(url, driver, result_names, result_prices):
     driver.find_element(By.CLASS_NAME, "css-1cda2ax").click()
     driver.find_element(By.ID, "EUR_USD").click()
 
-
     # Add the page source to the variable `content`.
     content = driver.page_source
     # Load the contents of the page, its source, into BeautifulSoup 
@@ -47,9 +45,6 @@ def scrap_binance(url, driver, result_names, result_prices):
 
     return result_names, result_prices
 
-# main.py
-# options = Options()
-# options.add_argument('--headless=new')
 def main():
     start_time = time.time()
 
@@ -62,13 +57,12 @@ def main():
 
     driver = webdriver.Chrome(options=options)
 
-    while 1==1:
+    while True:
         result_names = []
         result_prices = []
         scrap_swedbank(driver, result_names, result_prices)
         scrap_binance("https://www.binance.com/en/price/io-net", driver, result_names, result_prices)
         scrap_binance("https://www.binance.com/en/price/bitcoin", driver, result_names, result_prices)
-
 
         #print output of scraping
         current_time = time.strftime('%H:%M')
@@ -93,6 +87,5 @@ def main():
         time.sleep(600) #every 10min
 
     driver.quit()
-
 main()
 
