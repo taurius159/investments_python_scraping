@@ -6,8 +6,9 @@ from selenium.webdriver.common.by import By
 import time
 import os.path
 
-def scrap_swedbank(driver, result_names, result_prices):
-    driver.get('https://www.swedbank.lt/private/investor/funds/allFunds')
+def scrap_swedbank(url, driver, result_names, result_prices):
+    print(f"Scrapping url: {url}")
+    driver.get(url)
     
     content = driver.page_source
     soup = BeautifulSoup(content, 'html.parser')
@@ -23,6 +24,7 @@ def scrap_swedbank(driver, result_names, result_prices):
 
 def scrap_binance(url, driver, result_names, result_prices):
     # cryptocurrency prices scraping. io.net
+    print(f"Scrapping url: {url}")
     driver.get(url)
 
     # change currency to euro from usd
@@ -49,18 +51,13 @@ def main():
     start_time = time.time()
 
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless=new')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--start-maximized")
 
     driver = webdriver.Chrome(options=options)
 
     while True:
         result_names = []
         result_prices = []
-        scrap_swedbank(driver, result_names, result_prices)
+        scrap_swedbank("https://www.swedbank.lt/private/investor/funds/allFunds", driver, result_names, result_prices)
         scrap_binance("https://www.binance.com/en/price/io-net", driver, result_names, result_prices)
         scrap_binance("https://www.binance.com/en/price/bitcoin", driver, result_names, result_prices)
 

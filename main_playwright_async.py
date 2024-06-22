@@ -21,12 +21,34 @@ async def save_entry(result_names, result_prices):
     else:
         df.to_csv(filename, index=False, encoding='utf-8')
 
+async def scrap_swedbank(url):
+    print(f"Scrapping url: {url}...")
+    result_names = []
+    result_prices = []
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        await page.goto(url, timeout=50000)
+
+        # Add the page source to the variable `content`
+        content = await page.content()
+        soup = BeautifulSoup(content, 'html.parser')
+
+        for element in soup.find_all(id=lambda x: x and x.startswith('tableRow')):
+            name = element.find('a')
+            price = element.findAll('td')[4:5]
+            if "Swedbank Savings Fund 100" in name.text:
+                result_prices.append(price[0].get_text())
+                result_names.append(name.text)
+
+        await save_entry(result_names, result_prices)
+
 async def scrap_binance(url):
     print(f"Scrapping url: {url}...")
     result_names = []
     result_prices = []
     async with async_playwright() as p:
-        browser = await p.firefox.launch(headless=False)
+        browser = await p.firefox.launch(headless=True)
         page = await browser.new_page()
         await page.goto(url, timeout=50000)
         
@@ -55,19 +77,19 @@ async def main():
         
         print("Main scrapping loop started...")
         tasks = []
-        #scrap_swedbank(driver, result_names, result_prices)
+        task = asyncio.create_task(scrap_swedbank("https://www.swedbank.lt/private/investor/funds/allFunds"))
+        tasks.append(task)
         task = asyncio.create_task(scrap_binance("https://www.binance.com/en/price/io-net"))
         tasks.append(task)
         task = asyncio.create_task(scrap_binance("https://www.binance.com/en/price/bitcoin"))
         tasks.append(task)
 
+        print("About to start scrapping asynchronously...")
         await asyncio.gather(*tasks)
 
         time_difference = time.time() - start_time
-        print(f'Scraping time: %.2f seconds.' % time_difference)
-        time.sleep(600) #every 10min
-
-    # driver.quit() never runs as its outside infinite loop
+        print(f'Scraping time finished in: %.2f seconds.' % time_difference)
+        time.sleep(600) #repeat scrapping every 10min
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
